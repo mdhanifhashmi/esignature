@@ -25,12 +25,12 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
   if (!isSupabaseConfigured()) {
     return (
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md border-purple-100 bg-white/90 shadow-xl shadow-purple-500/10 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle>Supabase Not Configured</CardTitle>
+          <CardTitle className="text-purple-950">Supabase Not Configured</CardTitle>
           <CardDescription>
             Add your Supabase credentials to <code>.env.local</code> to enable authentication.
-            You can still use the <Link href="/editor" className="text-blue-600">editor</Link> without signing in.
+            You can still use the <Link href="/editor" className="text-purple-600">editor</Link> without signing in.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -77,14 +77,14 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md border-purple-100 bg-white/90 shadow-xl shadow-purple-500/10 backdrop-blur-sm">
       <CardHeader className="text-center">
         <Link href="/" className="mx-auto mb-4 flex items-center justify-center gap-2 font-bold">
-          <Sparkles className="h-5 w-5 text-blue-600" />
-          {APP_NAME}
+          <Sparkles className="h-5 w-5 text-purple-600" />
+          <span className="text-gradient-purple">{APP_NAME}</span>
         </Link>
-        <CardTitle>{mode === "login" ? "Welcome back" : "Create your account"}</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-purple-950">{mode === "login" ? "Welcome back" : "Create your account"}</CardTitle>
+        <CardDescription className="text-purple-600">
           {mode === "login" ? "Sign in to manage your signatures" : "Free forever — no credit card required"}
         </CardDescription>
       </CardHeader>
@@ -114,14 +114,14 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
           <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-slate-500">Or</span></div>
         </div>
-        <Button variant="outline" className="w-full" onClick={handleGoogleAuth}>
+        <Button variant="outline" className="w-full border-purple-200 text-purple-800" onClick={handleGoogleAuth}>
           Continue with Google
         </Button>
-        <p className="mt-4 text-center text-sm text-slate-600">
+        <p className="mt-4 text-center text-sm text-purple-600">
           {mode === "login" ? (
-            <>Don&apos;t have an account? <Link href="/signup" className="text-blue-600">Sign up</Link></>
+            <>Don&apos;t have an account? <Link href="/signup" className="font-medium text-purple-700 hover:text-purple-900">Sign up</Link></>
           ) : (
-            <>Already have an account? <Link href="/login" className="text-blue-600">Sign in</Link></>
+            <>Already have an account? <Link href="/login" className="font-medium text-purple-700 hover:text-purple-900">Sign in</Link></>
           )}
         </p>
       </CardContent>

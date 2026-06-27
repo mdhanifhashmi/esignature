@@ -78,8 +78,8 @@ export function BulkImport() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Bulk Create Signatures</h1>
-        <p className="text-sm text-slate-600">
+        <h1 className="text-2xl font-bold text-purple-950">Bulk Create Signatures</h1>
+        <p className="text-sm text-purple-600">
           Upload a CSV to generate signatures for your entire team at once.
         </p>
       </div>

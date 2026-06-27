@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChevronLeft, ChevronRight, Copy, Check, Wand2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MotionBackground } from "@/components/landing/motion-background";
 import { APP_NAME, ANIMATION_PRESETS, TEMPLATE_OPTIONS } from "@/lib/constants";
 import { getDefaultConfig, renderSignatureHtml } from "@/lib/signature/renderHtml";
 import type { SignatureConfig } from "@/types/signature";
@@ -41,6 +43,7 @@ export function SignatureEditor({
   }, []);
 
   const html = renderSignatureHtml(config);
+  const progress = ((step + 1) / STEPS.length) * 100;
 
   async function handleAiSuggest() {
     if (!config.fullName || !config.jobTitle || !config.company) return;
@@ -132,18 +135,22 @@ export function SignatureEditor({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
+    <div className="relative min-h-screen bg-mesh-purple">
+      <MotionBackground />
+
+      <header className="glass-purple relative z-10 border-b border-purple-200/50">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <Sparkles className="h-5 w-5 text-blue-600" />
-            {APP_NAME}
+          <Link href="/" className="flex items-center gap-2 font-bold text-purple-950">
+            <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 4 }}>
+              <Sparkles className="h-5 w-5 text-purple-600" />
+            </motion.div>
+            <span className="text-gradient-purple">{APP_NAME}</span>
           </Link>
           <div className="flex items-center gap-2">
             <Link href="/dashboard">
-              <Button variant="ghost" size="sm">Dashboard</Button>
+              <Button variant="ghost" size="sm" className="text-purple-700">Dashboard</Button>
             </Link>
-            <Button size="sm" onClick={handleSave} disabled={saving}>
+            <Button size="sm" onClick={handleSave} disabled={saving} className="shadow-md shadow-purple-500/20">
               <Save className="h-4 w-4" />
               {saving ? "Saving..." : "Save"}
             </Button>
@@ -151,35 +158,64 @@ export function SignatureEditor({
         </div>
       </header>
 
-      <div className="mx-auto max-w-7xl px-4 py-6">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-6">
         {saveMessage && (
-          <div className="mb-4 rounded-lg bg-blue-50 px-4 py-2 text-sm text-blue-700">
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={cn(
+              "mb-4 rounded-xl px-4 py-2 text-sm",
+              saveMessage.includes("success") ? "bg-green-50 text-green-700" : "bg-purple-50 text-purple-700"
+            )}
+          >
             {saveMessage}
-          </div>
+          </motion.div>
         )}
 
-        <div className="mb-6 flex items-center gap-2">
+        {/* Progress bar */}
+        <div className="mb-6">
+          <div className="mb-3 flex items-center justify-between text-xs text-purple-600">
+            <span>Step {step + 1} of {STEPS.length}</span>
+            <span>{Math.round(progress)}% complete</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-purple-100">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-500"
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            />
+          </div>
+        </div>
+
+        {/* Step pills */}
+        <div className="mb-6 flex flex-wrap items-center gap-2">
           {STEPS.map((s, i) => (
-            <button
+            <motion.button
               key={s}
               onClick={() => setStep(i)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               className={cn(
-                "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-                step === i ? "bg-blue-600 text-white" : "bg-white text-slate-600 hover:bg-slate-100"
+                "rounded-full px-4 py-1.5 text-sm font-medium transition-all",
+                step === i
+                  ? "bg-gradient-to-r from-purple-600 to-violet-600 text-white shadow-md shadow-purple-500/25"
+                  : i < step
+                    ? "bg-purple-100 text-purple-700"
+                    : "bg-white/80 text-purple-400 hover:bg-purple-50"
               )}
             >
               {s}
-            </button>
+            </motion.button>
           ))}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
+          <Card className="border-purple-100/80 bg-white/80 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle className="flex items-center justify-between text-purple-950">
                 <span>{STEPS[step]}</span>
                 {step === 0 && (
-                  <Button variant="outline" size="sm" onClick={handleAiSuggest} disabled={aiLoading}>
+                  <Button variant="outline" size="sm" onClick={handleAiSuggest} disabled={aiLoading} className="border-purple-200">
                     <Wand2 className="h-4 w-4" />
                     {aiLoading ? "Thinking..." : "AI Suggest"}
                   </Button>
@@ -187,99 +223,68 @@ export function SignatureEditor({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {step === 0 && (
-                <>
-                  <div>
-                    <Label htmlFor="name">Signature Name</Label>
-                    <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="fullName">Full Name</Label>
-                    <Input id="fullName" value={config.fullName} onChange={(e) => updateConfig({ fullName: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label htmlFor="jobTitle">Job Title</Label>
-                    <Input id="jobTitle" value={config.jobTitle} onChange={(e) => updateConfig({ jobTitle: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label htmlFor="company">Company</Label>
-                    <Input id="company" value={config.company} onChange={(e) => updateConfig({ company: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" value={config.email} onChange={(e) => updateConfig({ email: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input id="phone" value={config.phone} onChange={(e) => updateConfig({ phone: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label htmlFor="tagline">Tagline</Label>
-                    <Textarea id="tagline" value={config.tagline} onChange={(e) => updateConfig({ tagline: e.target.value })} />
-                  </div>
-                </>
-              )}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.25 }}
+                  className="space-y-4"
+                >
+                  {step === 0 && (
+                    <>
+                      <div><Label htmlFor="name">Signature Name</Label><Input id="name" value={name} onChange={(e) => setName(e.target.value)} /></div>
+                      <div><Label htmlFor="fullName">Full Name</Label><Input id="fullName" value={config.fullName} onChange={(e) => updateConfig({ fullName: e.target.value })} /></div>
+                      <div><Label htmlFor="jobTitle">Job Title</Label><Input id="jobTitle" value={config.jobTitle} onChange={(e) => updateConfig({ jobTitle: e.target.value })} /></div>
+                      <div><Label htmlFor="company">Company</Label><Input id="company" value={config.company} onChange={(e) => updateConfig({ company: e.target.value })} /></div>
+                      <div><Label htmlFor="email">Email</Label><Input id="email" type="email" value={config.email} onChange={(e) => updateConfig({ email: e.target.value })} /></div>
+                      <div><Label htmlFor="phone">Phone</Label><Input id="phone" value={config.phone} onChange={(e) => updateConfig({ phone: e.target.value })} /></div>
+                      <div><Label htmlFor="tagline">Tagline</Label><Textarea id="tagline" value={config.tagline} onChange={(e) => updateConfig({ tagline: e.target.value })} /></div>
+                    </>
+                  )}
 
-              {step === 1 && (
-                <>
-                  <div>
-                    <Label>Template</Label>
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      {TEMPLATE_OPTIONS.map((t) => (
-                        <button
-                          key={t.id}
-                          onClick={() => updateConfig({ templateId: t.id })}
-                          className={cn(
-                            "rounded-lg border p-3 text-left text-sm transition-colors",
-                            config.templateId === t.id ? "border-blue-600 bg-blue-50" : "border-slate-200 hover:border-slate-300"
-                          )}
-                        >
-                          <p className="font-medium">{t.label}</p>
-                          <p className="text-xs text-slate-500">{t.description}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="primaryColor">Primary</Label>
-                      <Input id="primaryColor" type="color" value={config.primaryColor} onChange={(e) => updateConfig({ primaryColor: e.target.value })} className="h-10" />
-                    </div>
-                    <div>
-                      <Label htmlFor="secondaryColor">Secondary</Label>
-                      <Input id="secondaryColor" type="color" value={config.secondaryColor} onChange={(e) => updateConfig({ secondaryColor: e.target.value })} className="h-10" />
-                    </div>
-                    <div>
-                      <Label htmlFor="textColor">Text</Label>
-                      <Input id="textColor" type="color" value={config.textColor} onChange={(e) => updateConfig({ textColor: e.target.value })} className="h-10" />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="logo">Logo Upload</Label>
-                    <Input id="logo" type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleImageUpload("logoUrl", e.target.files[0])} />
-                  </div>
-                  <div>
-                    <Label htmlFor="profile">Profile Photo</Label>
-                    <Input id="profile" type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleImageUpload("profileUrl", e.target.files[0])} />
-                  </div>
-                  <div>
-                    <Label htmlFor="website">Website URL</Label>
-                    <Input id="website" value={config.website} onChange={(e) => updateConfig({ website: e.target.value })} placeholder="https://yourcompany.com" />
-                  </div>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={config.showVerificationBadge}
-                      onChange={(e) => updateConfig({ showVerificationBadge: e.target.checked })}
-                    />
-                    Show verification badge
-                  </label>
-                </>
-              )}
+                  {step === 1 && (
+                    <>
+                      <div>
+                        <Label>Template</Label>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          {TEMPLATE_OPTIONS.map((t) => (
+                            <button
+                              key={t.id}
+                              onClick={() => updateConfig({ templateId: t.id })}
+                              className={cn(
+                                "rounded-xl border p-3 text-left text-sm transition-all",
+                                config.templateId === t.id
+                                  ? "border-purple-500 bg-purple-50 shadow-md shadow-purple-500/10"
+                                  : "border-purple-100 hover:border-purple-300"
+                              )}
+                            >
+                              <p className="font-medium text-purple-950">{t.label}</p>
+                              <p className="text-xs text-purple-500">{t.description}</p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        {(["primaryColor", "secondaryColor", "textColor"] as const).map((c) => (
+                          <div key={c}>
+                            <Label htmlFor={c}>{c.replace("Color", "")}</Label>
+                            <Input id={c} type="color" value={config[c]} onChange={(e) => updateConfig({ [c]: e.target.value })} className="h-10" />
+                          </div>
+                        ))}
+                      </div>
+                      <div><Label htmlFor="logo">Logo Upload</Label><Input id="logo" type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleImageUpload("logoUrl", e.target.files[0])} /></div>
+                      <div><Label htmlFor="profile">Profile Photo</Label><Input id="profile" type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleImageUpload("profileUrl", e.target.files[0])} /></div>
+                      <div><Label htmlFor="website">Website URL</Label><Input id="website" value={config.website} onChange={(e) => updateConfig({ website: e.target.value })} placeholder="https://yourcompany.com" /></div>
+                      <label className="flex items-center gap-2 text-sm text-purple-700">
+                        <input type="checkbox" checked={config.showVerificationBadge} onChange={(e) => updateConfig({ showVerificationBadge: e.target.checked })} className="accent-purple-600" />
+                        Show verification badge
+                      </label>
+                    </>
+                  )}
 
-              {step === 2 && (
-                <>
-                  {config.socialLinks.map((link, index) => (
+                  {step === 2 && config.socialLinks.map((link, index) => (
                     <div key={link.id} className="flex items-end gap-2">
                       <div className="flex-1">
                         <Label>{link.label}</Label>
@@ -293,89 +298,72 @@ export function SignatureEditor({
                           placeholder={`https://${link.type}.com/yourprofile`}
                         />
                       </div>
-                      <label className="flex items-center gap-1 pb-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={link.enabled}
-                          onChange={(e) => {
-                            const links = [...config.socialLinks];
-                            links[index] = { ...link, enabled: e.target.checked };
-                            updateConfig({ socialLinks: links });
-                          }}
-                        />
+                      <label className="flex items-center gap-1 pb-2 text-sm text-purple-700">
+                        <input type="checkbox" checked={link.enabled} onChange={(e) => {
+                          const links = [...config.socialLinks];
+                          links[index] = { ...link, enabled: e.target.checked };
+                          updateConfig({ socialLinks: links });
+                        }} className="accent-purple-600" />
                         On
                       </label>
                     </div>
                   ))}
-                </>
-              )}
 
-              {step === 3 && (
-                <>
-                  <div>
-                    <Label>Logo Animation</Label>
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      {ANIMATION_PRESETS.logo.map((preset) => (
-                        <button
-                          key={preset.id}
-                          onClick={() => updateConfig({ logoAnimation: preset.id })}
-                          className={cn(
-                            "rounded-lg border p-3 text-left text-sm",
-                            config.logoAnimation === preset.id ? "border-blue-600 bg-blue-50" : "border-slate-200"
-                          )}
-                        >
-                          <p className="font-medium">{preset.label}</p>
-                          <p className="text-xs text-slate-500">{preset.description}</p>
-                        </button>
+                  {step === 3 && (
+                    <>
+                      {(["logo", "profile"] as const).map((type) => (
+                        <div key={type}>
+                          <Label>{type === "logo" ? "Logo" : "Profile"} Animation</Label>
+                          <div className="mt-2 grid grid-cols-2 gap-2">
+                            {ANIMATION_PRESETS[type].map((preset) => {
+                              const key = type === "logo" ? "logoAnimation" : "profileAnimation";
+                              return (
+                                <button
+                                  key={preset.id}
+                                  onClick={() => updateConfig({ [key]: preset.id })}
+                                  className={cn(
+                                    "rounded-xl border p-3 text-left text-sm transition-all",
+                                    config[key] === preset.id
+                                      ? "border-purple-500 bg-purple-50"
+                                      : "border-purple-100 hover:border-purple-300"
+                                  )}
+                                >
+                                  <p className="font-medium text-purple-950">{preset.label}</p>
+                                  <p className="text-xs text-purple-500">{preset.description}</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       ))}
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Profile Animation</Label>
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      {ANIMATION_PRESETS.profile.map((preset) => (
-                        <button
-                          key={preset.id}
-                          onClick={() => updateConfig({ profileAnimation: preset.id })}
-                          className={cn(
-                            "rounded-lg border p-3 text-left text-sm",
-                            config.profileAnimation === preset.id ? "border-blue-600 bg-blue-50" : "border-slate-200"
-                          )}
-                        >
-                          <p className="font-medium">{preset.label}</p>
-                          <p className="text-xs text-slate-500">{preset.description}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <Button onClick={handleGenerateAnimations} disabled={animating || (!config.logoUrl && !config.profileUrl)}>
-                    {animating ? "Generating..." : "Generate Animated GIFs"}
-                  </Button>
-                  {(config.logoGifUrl || config.profileGifUrl) && (
-                    <Badge className="bg-green-50 text-green-700">Animations generated!</Badge>
+                      <Button onClick={handleGenerateAnimations} disabled={animating || (!config.logoUrl && !config.profileUrl)}>
+                        {animating ? "Generating..." : "Generate Animated GIFs"}
+                      </Button>
+                      {(config.logoGifUrl || config.profileGifUrl) && (
+                        <Badge className="border-green-200 bg-green-50 text-green-700">Animations generated!</Badge>
+                      )}
+                    </>
                   )}
-                </>
-              )}
 
-              {step === 4 && (
-                <>
-                  <p className="text-sm text-slate-600">
-                    Copy the HTML below and paste it into your email client signature settings.
-                  </p>
-                  <Textarea readOnly value={html} className="min-h-[200px] font-mono text-xs" />
-                  <div className="flex flex-wrap gap-2">
-                    <Button onClick={handleCopy}>
-                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      {copied ? "Copied!" : "Copy HTML"}
-                    </Button>
-                    <Link href="/guides/gmail"><Button variant="outline">Gmail Guide</Button></Link>
-                    <Link href="/guides/outlook"><Button variant="outline">Outlook Guide</Button></Link>
-                  </div>
-                </>
-              )}
+                  {step === 4 && (
+                    <>
+                      <p className="text-sm text-purple-600">Copy the HTML below and paste it into your email client signature settings.</p>
+                      <Textarea readOnly value={html} className="min-h-[200px] font-mono text-xs border-purple-100" />
+                      <div className="flex flex-wrap gap-2">
+                        <Button onClick={handleCopy}>
+                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                          {copied ? "Copied!" : "Copy HTML"}
+                        </Button>
+                        <Link href="/guides/gmail"><Button variant="outline" className="border-purple-200">Gmail Guide</Button></Link>
+                        <Link href="/guides/outlook"><Button variant="outline" className="border-purple-200">Outlook Guide</Button></Link>
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              </AnimatePresence>
 
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>
+              <div className="flex justify-between border-t border-purple-100 pt-4">
+                <Button variant="outline" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0} className="border-purple-200">
                   <ChevronLeft className="h-4 w-4" /> Back
                 </Button>
                 <Button onClick={() => setStep(Math.min(STEPS.length - 1, step + 1))} disabled={step === STEPS.length - 1}>
@@ -385,15 +373,21 @@ export function SignatureEditor({
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-purple-100/80 bg-white/80 backdrop-blur-sm lg:sticky lg:top-20 lg:self-start">
             <CardHeader>
-              <CardTitle>Live Preview</CardTitle>
+              <CardTitle className="text-purple-950">Live Preview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="rounded-lg border border-slate-200 bg-white p-6">
+              <motion.div
+                className="animate-nav-pulse rounded-xl border border-purple-100 bg-white p-6"
+                key={html.slice(0, 50)}
+                initial={{ opacity: 0.5 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
                 <div dangerouslySetInnerHTML={{ __html: html }} />
-              </div>
-              <p className="mt-4 text-xs text-slate-500">
+              </motion.div>
+              <p className="mt-4 text-xs text-purple-400">
                 Outlook desktop shows the first GIF frame as a static image. We design for that fallback.
               </p>
             </CardContent>

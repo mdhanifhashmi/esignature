@@ -66,7 +66,7 @@ export function TeamManager() {
     return (
       <Card className="max-w-md">
         <CardHeader>
-          <CardTitle>Create Your Team</CardTitle>
+          <h1 className="text-2xl font-bold text-purple-950">Create Your Team</h1>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleCreateOrg} className="space-y-4">
@@ -85,8 +85,8 @@ export function TeamManager() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">{org.name}</h1>
-        <p className="text-sm text-slate-600">Manage team members and shared signatures.</p>
+          <h1 className="text-2xl font-bold text-purple-950">{org.name}</h1>
+          <p className="text-sm text-purple-600">Manage team members and shared signatures.</p>
       </div>
 
       <Card>

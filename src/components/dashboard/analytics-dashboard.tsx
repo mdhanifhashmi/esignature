@@ -32,13 +32,13 @@ export function AnalyticsDashboard() {
       .catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-slate-500">Loading analytics...</p>;
+  if (loading) return <p className="text-purple-600">Loading analytics...</p>;
 
   if (!data) {
     return (
       <div>
-        <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="mt-2 text-slate-600">No analytics data yet. Save a signature with tracked links to get started.</p>
+        <h1 className="text-2xl font-bold text-purple-950">Analytics</h1>
+        <p className="mt-2 text-purple-600">No analytics data yet. Save a signature with tracked links to get started.</p>
       </div>
     );
   }
@@ -46,17 +46,17 @@ export function AnalyticsDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="text-sm text-slate-600">Privacy-first click tracking — no tracking pixels.</p>
+        <h1 className="text-2xl font-bold text-purple-950">Analytics</h1>
+        <p className="text-sm text-purple-600">Privacy-first click tracking — no tracking pixels.</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Total Clicks</CardTitle>
+            <CardTitle className="text-sm font-medium text-purple-600">Total Clicks</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{data.totalClicks}</p>
+            <p className="text-3xl font-bold text-gradient-purple">{data.totalClicks}</p>
           </CardContent>
         </Card>
       </div>
@@ -73,7 +73,7 @@ export function AnalyticsDashboard() {
                 <XAxis dataKey="label" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="clicks" fill="#2563eb" />
+                <Bar dataKey="clicks" fill="#9333ea" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -92,7 +92,7 @@ export function AnalyticsDashboard() {
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="clicks" fill="#64748b" />
+                <Bar dataKey="clicks" fill="#a855f7" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

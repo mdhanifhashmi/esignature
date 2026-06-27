@@ -56,15 +56,20 @@ export function SignatureList() {
   }
 
   if (loading) {
-    return <p className="text-slate-500">Loading signatures...</p>;
+    return (
+      <div className="flex items-center gap-3 text-purple-600">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-purple-300 border-t-purple-600" />
+        Loading signatures...
+      </div>
+    );
   }
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Signature Manager</h1>
-          <p className="text-sm text-slate-600">Create, organize, and deploy your email signatures.</p>
+          <h1 className="text-2xl font-bold text-purple-950">Signature Manager</h1>
+          <p className="text-sm text-purple-600">Create, organize, and deploy your email signatures.</p>
         </div>
         <Link href="/editor">
           <Button><Plus className="h-4 w-4" /> New Signature</Button>
@@ -72,9 +77,9 @@ export function SignatureList() {
       </div>
 
       {signatures.length === 0 ? (
-        <Card>
+        <Card className="border-purple-100 bg-white/80">
           <CardContent className="py-12 text-center">
-            <p className="text-slate-600">No signatures yet.</p>
+            <p className="text-purple-600">No signatures yet.</p>
             <Link href="/editor">
               <Button className="mt-4">Create Your First Signature</Button>
             </Link>
@@ -83,11 +88,11 @@ export function SignatureList() {
       ) : (
         <div className="grid gap-4">
           {signatures.map((sig) => (
-            <Card key={sig.id}>
+            <Card key={sig.id} className="card-glow border-purple-100 bg-white/80 transition-all hover:border-purple-200">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
-                  <CardTitle className="text-lg">{sig.name}</CardTitle>
-                  <p className="text-xs text-slate-500">Updated {formatDate(sig.updated_at)}</p>
+                  <CardTitle className="text-lg text-purple-950">{sig.name}</CardTitle>
+                  <p className="text-xs text-purple-400">Updated {formatDate(sig.updated_at)}</p>
                 </div>
                 <div className="flex gap-2">
                   <Link href={`/editor/${sig.id}`}>
@@ -105,10 +110,10 @@ export function SignatureList() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
+                <div className="rounded-xl border border-purple-50 bg-purple-50/50 p-4">
                   <div dangerouslySetInnerHTML={{ __html: sig.html_output }} />
                 </div>
-                <p className="mt-2 text-xs text-slate-400">
+                <p className="mt-2 text-xs text-purple-400">
                   Public URL: {APP_URL}/s/{sig.public_slug}
                 </p>
               </CardContent>
