@@ -1,3 +1,7 @@
+"use client";
+
+import { FadeIn, FadeInItem } from "@/components/landing/fade-in";
+
 const faqs = [
   {
     q: "Is SigMotion really free?",
@@ -27,24 +31,32 @@ const faqs = [
 
 export function FAQ() {
   return (
-    <section id="faq" className="bg-white px-4 py-20 sm:px-6">
+    <section id="faq" className="bg-white px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-3xl">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">Frequently Asked Questions</h2>
-        </div>
-        <div className="mt-12 space-y-6">
+        <FadeIn className="text-center">
+          <span className="inline-block rounded-full bg-purple-100 px-4 py-1 text-sm font-medium text-purple-700">
+            FAQ
+          </span>
+          <h2 className="mt-4 text-3xl font-bold text-purple-950 sm:text-4xl">
+            Frequently Asked Questions
+          </h2>
+        </FadeIn>
+
+        <FadeIn className="mt-12 space-y-4" stagger>
           {faqs.map((faq) => (
-            <details
-              key={faq.q}
-              className="group rounded-xl border border-slate-200 p-6 open:bg-slate-50"
-            >
-              <summary className="cursor-pointer text-lg font-medium text-slate-900">
-                {faq.q}
-              </summary>
-              <p className="mt-3 text-sm text-slate-600">{faq.a}</p>
-            </details>
+            <FadeInItem key={faq.q}>
+              <details className="group rounded-2xl border border-purple-100 bg-purple-50/30 p-6 open:border-purple-200 open:bg-purple-50 open:shadow-md open:shadow-purple-500/5 transition-all">
+                <summary className="cursor-pointer list-none text-lg font-medium text-purple-950 marker:hidden">
+                  <span className="flex items-center justify-between">
+                    {faq.q}
+                    <span className="ml-4 text-purple-400 transition-transform group-open:rotate-45">+</span>
+                  </span>
+                </summary>
+                <p className="mt-3 text-sm leading-relaxed text-purple-700/80">{faq.a}</p>
+              </details>
+            </FadeInItem>
           ))}
-        </div>
+        </FadeIn>
       </div>
     </section>
   );
