@@ -1,4 +1,17 @@
-export type TemplateId = "nav-left" | "nav-bottom" | "card" | "minimal";
+export type TemplateId =
+  | "nav-left"
+  | "nav-bottom"
+  | "card"
+  | "minimal"
+  | "banner"
+  | "split"
+  | "corporate"
+  | "creative"
+  | "stack"
+  | "compact"
+  | "sidebar"
+  | "gradient";
+
 export type LogoAnimationPreset = "pulse" | "fadeLoop" | "slideReveal" | "subtleRotate";
 export type ProfileAnimationPreset = "ringPulse" | "zoomLoop" | "fadeLoop";
 

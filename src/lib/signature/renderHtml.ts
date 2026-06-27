@@ -161,6 +161,125 @@ export function renderSignatureHtml(
         ${badge}
       </table>`;
 
+    case "banner":
+      return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;max-width:480px;">
+        <tr><td style="background:${config.primaryColor};height:4px;border-radius:4px 4px 0 0;font-size:0;line-height:0;">&nbsp;</td></tr>
+        <tr><td style="padding:12px 0;">
+          <table cellpadding="0" cellspacing="0" border="0"><tr>
+            <td style="padding-right:14px;vertical-align:top;">${profile}</td>
+            <td style="vertical-align:top;"><table cellpadding="0" cellspacing="0" border="0">${contact}</table></td>
+            <td style="padding-left:14px;vertical-align:top;">${logo}</td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding-top:6px;border-top:1px solid ${config.secondaryColor}33;">${nav}</td></tr>
+        ${badge}
+      </table>`;
+
+    case "split":
+      return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;">
+        <tr>
+          <td style="padding-right:16px;vertical-align:top;border-right:3px solid ${config.primaryColor};">${profile}${logo ? `<div style="margin-top:8px;">${logo}</div>` : ""}</td>
+          <td style="padding-left:16px;vertical-align:top;">
+            <table cellpadding="0" cellspacing="0" border="0">${contact}${badge}</table>
+            <div style="margin-top:10px;">${nav}</div>
+          </td>
+        </tr>
+      </table>`;
+
+    case "corporate":
+      return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;text-align:center;">
+        <tr><td style="padding-bottom:10px;text-align:center;">${logo || `<span style="font-size:18px;font-weight:bold;color:${config.primaryColor};">${escapeHtml(config.company)}</span>`}</td></tr>
+        <tr><td style="border-top:1px solid ${config.secondaryColor};padding-top:10px;">
+          <table cellpadding="0" cellspacing="0" border="0" align="center"><tr>
+            <td style="padding-right:12px;vertical-align:top;">${profile}</td>
+            <td style="vertical-align:top;text-align:left;"><table cellpadding="0" cellspacing="0" border="0">${contact}</table></td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding-top:10px;text-align:center;">${nav}</td></tr>
+        ${badge ? `<tr><td style="text-align:center;">${badge.replace("<tr><td", "<td").replace("</td></tr>", "</td>")}</td></tr>` : ""}
+      </table>`;
+
+    case "creative":
+      return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;">
+        <tr>
+          <td style="width:5px;background:${config.primaryColor};border-radius:3px;">&nbsp;</td>
+          <td style="padding-left:14px;vertical-align:top;">
+            <table cellpadding="0" cellspacing="0" border="0"><tr>
+              <td style="padding-right:12px;vertical-align:top;">${profile}</td>
+              <td style="vertical-align:top;"><table cellpadding="0" cellspacing="0" border="0">${contact}</table></td>
+            </tr></table>
+            <table cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;width:100%;"><tr>
+              <td>${logo}</td><td style="text-align:right;vertical-align:middle;">${nav}</td>
+            </tr></table>
+            ${badge}
+          </td>
+        </tr>
+      </table>`;
+
+    case "stack":
+      return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;text-align:center;">
+        <tr><td style="text-align:center;padding-bottom:8px;">${profile}</td></tr>
+        <tr><td style="text-align:center;"><table cellpadding="0" cellspacing="0" border="0" align="center">${contact}</table></td></tr>
+        <tr><td style="padding-top:8px;text-align:center;">${logo}</td></tr>
+        <tr><td style="padding-top:10px;text-align:center;">${nav}</td></tr>
+        ${badge ? `<tr><td style="text-align:center;">${badge.replace("<tr><td", "<td").replace("</td></tr>", "</td>")}</td></tr>` : ""}
+      </table>`;
+
+    case "compact":
+      return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;">
+        <tr>
+          <td style="padding-right:10px;vertical-align:middle;">${profile || logo}</td>
+          <td style="vertical-align:middle;border-left:2px solid ${config.primaryColor};padding-left:10px;">
+            <table cellpadding="0" cellspacing="0" border="0">${contact}</table>
+          </td>
+          <td style="padding-left:10px;vertical-align:middle;">${nav}</td>
+        </tr>
+      </table>`;
+
+    case "sidebar":
+      return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;">
+        <tr>
+          <td style="background:${config.primaryColor}11;padding:12px;vertical-align:top;border-radius:8px 0 0 8px;min-width:100px;">
+            ${profile}
+            <div style="margin-top:8px;">${logo}</div>
+          </td>
+          <td style="padding:12px;vertical-align:top;">
+            <table cellpadding="0" cellspacing="0" border="0">${contact}${badge}</table>
+            <div style="margin-top:10px;">${nav}</div>
+          </td>
+        </tr>
+      </table>`;
+
+    case "gradient": {
+      const bodyLines = [
+        config.company &&
+          `<span style="font-size:13px;font-weight:600;color:${config.primaryColor};">${escapeHtml(config.company)}</span>`,
+        config.email &&
+          `<a href="mailto:${escapeHtml(config.email)}" style="font-size:12px;color:${config.primaryColor};text-decoration:none;">${escapeHtml(config.email)}</a>`,
+        config.phone &&
+          `<span style="font-size:12px;color:${config.textColor};">${escapeHtml(config.phone)}</span>`,
+        config.website &&
+          `<a href="${escapeHtml(config.website)}" style="font-size:12px;color:${config.primaryColor};text-decoration:none;">${escapeHtml(config.website.replace(/^https?:\/\//, ""))}</a>`,
+      ].filter(Boolean);
+      const bodyContact = bodyLines
+        .map((line) => `<tr><td style="padding:2px 0;line-height:1.4;">${line}</td></tr>`)
+        .join("");
+      return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;border-radius:8px;overflow:hidden;">
+        <tr><td style="background:linear-gradient(135deg,${config.primaryColor},${config.secondaryColor});padding:10px 14px;">
+          <span style="font-size:15px;font-weight:bold;color:#ffffff;">${escapeHtml(config.fullName || "Your Name")}</span>
+          ${config.jobTitle ? `<br><span style="font-size:12px;color:#ffffffcc;">${escapeHtml(config.jobTitle)}</span>` : ""}
+        </td></tr>
+        <tr><td style="padding:12px 14px;background:#ffffff;">
+          <table cellpadding="0" cellspacing="0" border="0"><tr>
+            <td style="padding-right:12px;vertical-align:top;">${profile}</td>
+            <td style="vertical-align:top;"><table cellpadding="0" cellspacing="0" border="0">${bodyContact}</table></td>
+            <td style="padding-left:12px;vertical-align:top;">${logo}</td>
+          </tr></table>
+          <div style="margin-top:10px;">${nav}</div>
+        </td></tr>
+      </table>`;
+    }
+
     case "nav-left":
     default:
       return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;">

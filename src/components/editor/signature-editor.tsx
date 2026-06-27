@@ -11,7 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MotionBackground } from "@/components/landing/motion-background";
-import { APP_NAME, ANIMATION_PRESETS, TEMPLATE_OPTIONS } from "@/lib/constants";
+import { APP_NAME, ANIMATION_PRESETS } from "@/lib/constants";
+import { TemplatePicker } from "@/components/editor/template-picker";
+import { ColorPalettePicker } from "@/components/editor/color-palette-picker";
 import { getDefaultConfig, renderSignatureHtml } from "@/lib/signature/renderHtml";
 import type { SignatureConfig } from "@/types/signature";
 import { cn } from "@/lib/utils";
@@ -247,33 +249,23 @@ export function SignatureEditor({
                   {step === 1 && (
                     <>
                       <div>
-                        <Label>Template</Label>
-                        <div className="mt-2 grid grid-cols-2 gap-2">
-                          {TEMPLATE_OPTIONS.map((t) => (
-                            <button
-                              key={t.id}
-                              onClick={() => updateConfig({ templateId: t.id })}
-                              className={cn(
-                                "rounded-xl border p-3 text-left text-sm transition-all",
-                                config.templateId === t.id
-                                  ? "border-purple-500 bg-purple-50 shadow-md shadow-purple-500/10"
-                                  : "border-purple-100 hover:border-purple-300"
-                              )}
-                            >
-                              <p className="font-medium text-purple-950">{t.label}</p>
-                              <p className="text-xs text-purple-500">{t.description}</p>
-                            </button>
-                          ))}
+                        <Label className="text-purple-950">Choose Template</Label>
+                        <div className="mt-3">
+                          <TemplatePicker
+                            selectedId={config.templateId}
+                            primaryColor={config.primaryColor}
+                            secondaryColor={config.secondaryColor}
+                            textColor={config.textColor}
+                            onSelect={(id) => updateConfig({ templateId: id })}
+                          />
                         </div>
                       </div>
-                      <div className="grid grid-cols-3 gap-4">
-                        {(["primaryColor", "secondaryColor", "textColor"] as const).map((c) => (
-                          <div key={c}>
-                            <Label htmlFor={c}>{c.replace("Color", "")}</Label>
-                            <Input id={c} type="color" value={config[c]} onChange={(e) => updateConfig({ [c]: e.target.value })} className="h-10" />
-                          </div>
-                        ))}
-                      </div>
+                      <ColorPalettePicker
+                        primaryColor={config.primaryColor}
+                        secondaryColor={config.secondaryColor}
+                        textColor={config.textColor}
+                        onChange={(colors) => updateConfig(colors)}
+                      />
                       <div><Label htmlFor="logo">Logo Upload</Label><Input id="logo" type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleImageUpload("logoUrl", e.target.files[0])} /></div>
                       <div><Label htmlFor="profile">Profile Photo</Label><Input id="profile" type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleImageUpload("profileUrl", e.target.files[0])} /></div>
                       <div><Label htmlFor="website">Website URL</Label><Input id="website" value={config.website} onChange={(e) => updateConfig({ website: e.target.value })} placeholder="https://yourcompany.com" /></div>

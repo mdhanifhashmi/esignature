@@ -28,8 +28,16 @@ export const ANIMATION_PRESETS = {
 } as const;
 
 export const TEMPLATE_OPTIONS = [
-  { id: "nav-left", label: "Nav Left", description: "Profile left, nav icons on the right" },
-  { id: "nav-bottom", label: "Nav Bottom", description: "Content on top, nav bar below" },
-  { id: "card", label: "Card", description: "Bordered card layout" },
+  { id: "nav-left", label: "Nav Left", description: "Profile left, content center, logo right" },
+  { id: "nav-bottom", label: "Nav Bottom", description: "Content row with nav bar underneath" },
+  { id: "card", label: "Card", description: "Bordered card with logo and nav footer" },
   { id: "minimal", label: "Minimal", description: "Clean text-focused design" },
+  { id: "banner", label: "Banner", description: "Bold top accent stripe" },
+  { id: "split", label: "Split", description: "Two-column with accent divider" },
+  { id: "corporate", label: "Corporate", description: "Logo header, professional layout" },
+  { id: "creative", label: "Creative", description: "Left accent bar design" },
+  { id: "stack", label: "Stack", description: "Vertically stacked centered" },
+  { id: "compact", label: "Compact", description: "Dense horizontal layout" },
+  { id: "sidebar", label: "Sidebar", description: "Wide left contact sidebar" },
+  { id: "gradient", label: "Gradient Bar", description: "Gradient header band" },
 ] as const;
