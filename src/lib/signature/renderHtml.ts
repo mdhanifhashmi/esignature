@@ -15,13 +15,75 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
+// Colors are interpolated into style attributes (and suffixed with alpha
+// like `${color}33`), so they must be strict 6-digit hex.
+function safeColor(value: unknown, fallback: string): string {
+  if (typeof value !== "string") return fallback;
+  const v = value.trim();
+  if (/^#[0-9a-f]{6}$/i.test(v)) return v;
+  const short = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(v);
+  if (short) return `#${short[1]}${short[1]}${short[2]}${short[2]}${short[3]}${short[3]}`;
+  return fallback;
+}
+
+export function safeHref(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const v = value.trim();
+  if (!v) return "";
+  if (/^https?:\/\//i.test(v)) return v;
+  if (/^[\w-]+(\.[\w-]+)+([/?#].*)?$/.test(v)) return `https://${v}`;
+  return "";
+}
+
+function safeImageSrc(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const v = value.trim();
+  if (/^https?:\/\//i.test(v)) return v;
+  if (/^data:image\/(png|jpeg|gif|webp);base64,/i.test(v)) return v;
+  return "";
+}
+
+export function sanitizeConfig(config: SignatureConfig): SignatureConfig {
+  const defaults = getDefaultConfig();
+  const str = (v: unknown) => (typeof v === "string" ? v : "");
+  return {
+    ...config,
+    fullName: str(config.fullName),
+    jobTitle: str(config.jobTitle),
+    company: str(config.company),
+    email: str(config.email),
+    phone: str(config.phone),
+    tagline: str(config.tagline),
+    website: safeHref(config.website),
+    primaryColor: safeColor(config.primaryColor, defaults.primaryColor),
+    secondaryColor: safeColor(config.secondaryColor, defaults.secondaryColor),
+    textColor: safeColor(config.textColor, defaults.textColor),
+    logoUrl: safeImageSrc(config.logoUrl),
+    profileUrl: safeImageSrc(config.profileUrl),
+    logoGifUrl: safeImageSrc(config.logoGifUrl) || undefined,
+    profileGifUrl: safeImageSrc(config.profileGifUrl) || undefined,
+    socialLinks: (Array.isArray(config.socialLinks) ? config.socialLinks : []).map((link) => ({
+      ...link,
+      label: str(link.label),
+      url: safeHref(link.url),
+      enabled: Boolean(link.enabled),
+    })),
+    showVerificationBadge: Boolean(config.showVerificationBadge),
+  };
+}
+
+export const CONTACT_WEBSITE_LINK_KEY = "contact-website";
+
+export function socialLinkKey(linkId: string): string {
+  return `social-${linkId}`;
+}
+
 function getLinkUrl(
   url: string,
-  label: string,
+  key: string,
   trackedLinkMap?: Record<string, string>
 ): string {
   if (!url) return "#";
-  const key = label.toLowerCase();
   return trackedLinkMap?.[key] ?? url;
 }
 
@@ -36,8 +98,8 @@ function renderNavIcons(
     .map(
       (link) =>
         `<td style="padding:0 4px;">
-          <a href="${escapeHtml(getLinkUrl(link.url, link.label, trackedLinkMap))}" target="_blank" style="text-decoration:none;">
-            <img src="${escapeHtml(link.url.includes("http") ? getSocialIconUrl(link.type) : link.url)}" alt="${escapeHtml(link.label)}" width="24" height="24" style="display:block;border:0;" />
+          <a href="${escapeHtml(getLinkUrl(link.url, socialLinkKey(link.id), trackedLinkMap))}" target="_blank" style="text-decoration:none;">
+            <img src="${escapeHtml(getSocialIconUrl(link.type))}" alt="${escapeHtml(link.label)}" width="24" height="24" style="display:block;border:0;" />
           </a>
         </td>`
     )
@@ -46,18 +108,12 @@ function renderNavIcons(
   return `<table cellpadding="0" cellspacing="0" border="0"><tr>${icons}</tr></table>`;
 }
 
+// PNG, not SVG: Gmail and Outlook do not render SVG images.
+const SOCIAL_ICON_TYPES = new Set(["website", "linkedin", "twitter", "instagram", "facebook", "youtube", "github"]);
+
 function getSocialIconUrl(type: string): string {
-  const base = "https://cdn.jsdelivr.net/npm/simple-icons@v11/icons";
-  const map: Record<string, string> = {
-    linkedin: `${base}/linkedin.svg`,
-    twitter: `${base}/x.svg`,
-    instagram: `${base}/instagram.svg`,
-    facebook: `${base}/facebook.svg`,
-    youtube: `${base}/youtube.svg`,
-    github: `${base}/github.svg`,
-    website: `${base}/googlechrome.svg`,
-  };
-  return map[type] ?? map.website;
+  const name = SOCIAL_ICON_TYPES.has(type) ? type : "website";
+  return `${APP_URL}/icons/${name}.png`;
 }
 
 function renderProfileImage(config: SignatureConfig, profileUrl?: string): string {
@@ -72,7 +128,7 @@ function renderLogo(config: SignatureConfig, logoUrl?: string): string {
   return `<img src="${escapeHtml(url)}" alt="${escapeHtml(config.company)}" width="120" height="40" style="display:block;" />`;
 }
 
-function renderContactInfo(config: SignatureConfig): string {
+function renderContactInfo(config: SignatureConfig, websiteHref: string): string {
   const lines = [
     config.fullName &&
       `<span style="font-size:16px;font-weight:bold;color:${config.textColor};">${escapeHtml(config.fullName)}</span>`,
@@ -87,7 +143,7 @@ function renderContactInfo(config: SignatureConfig): string {
     config.phone &&
       `<span style="font-size:12px;color:${config.textColor};">${escapeHtml(config.phone)}</span>`,
     config.website &&
-      `<a href="${escapeHtml(config.website)}" style="font-size:12px;color:${config.primaryColor};text-decoration:none;">${escapeHtml(config.website.replace(/^https?:\/\//, ""))}</a>`,
+      `<a href="${escapeHtml(websiteHref)}" style="font-size:12px;color:${config.primaryColor};text-decoration:none;">${escapeHtml(config.website.replace(/^https?:\/\//, ""))}</a>`,
   ].filter(Boolean);
 
   return lines
@@ -111,11 +167,15 @@ export function renderSignatureHtml(
   config: SignatureConfig,
   options: RenderOptions = {}
 ): string {
-  const { trackedLinkMap, logoGifUrl, profileGifUrl } = options;
+  config = sanitizeConfig(config);
+  const trackedLinkMap = options.trackedLinkMap;
+  const logoGifUrl = safeImageSrc(options.logoGifUrl) || undefined;
+  const profileGifUrl = safeImageSrc(options.profileGifUrl) || undefined;
   const nav = renderNavIcons(config, trackedLinkMap);
   const profile = renderProfileImage(config, profileGifUrl);
   const logo = renderLogo(config, logoGifUrl);
-  const contact = renderContactInfo(config);
+  const websiteHref = getLinkUrl(config.website, CONTACT_WEBSITE_LINK_KEY, trackedLinkMap);
+  const contact = renderContactInfo(config, websiteHref);
   const badge = renderVerificationBadge(config);
 
   switch (config.templateId) {
@@ -259,7 +319,7 @@ export function renderSignatureHtml(
         config.phone &&
           `<span style="font-size:12px;color:${config.textColor};">${escapeHtml(config.phone)}</span>`,
         config.website &&
-          `<a href="${escapeHtml(config.website)}" style="font-size:12px;color:${config.primaryColor};text-decoration:none;">${escapeHtml(config.website.replace(/^https?:\/\//, ""))}</a>`,
+          `<a href="${escapeHtml(websiteHref)}" style="font-size:12px;color:${config.primaryColor};text-decoration:none;">${escapeHtml(config.website.replace(/^https?:\/\//, ""))}</a>`,
       ].filter(Boolean);
       const bodyContact = bodyLines
         .map((line) => `<tr><td style="padding:2px 0;line-height:1.4;">${line}</td></tr>`)

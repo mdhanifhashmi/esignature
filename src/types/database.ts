@@ -78,7 +78,22 @@ export interface Database {
         Update: {
           role?: "owner" | "admin" | "member";
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "org_members_org_id_fkey";
+            columns: ["org_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "org_members_user_id_profiles_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       signatures: {
         Row: {
@@ -123,6 +138,7 @@ export interface Database {
           label: string;
           destination_url: string;
           short_id: string;
+          link_key: string | null;
           created_at: string;
         };
         Insert: {
@@ -131,6 +147,7 @@ export interface Database {
           label: string;
           destination_url: string;
           short_id: string;
+          link_key?: string | null;
           created_at?: string;
         };
         Update: {
@@ -158,7 +175,8 @@ export interface Database {
       bulk_import_jobs: {
         Row: {
           id: string;
-          org_id: string;
+          org_id: string | null;
+          user_id: string | null;
           status: "pending" | "processing" | "completed" | "failed";
           csv_data: Json;
           results: Json;
@@ -167,7 +185,8 @@ export interface Database {
         };
         Insert: {
           id?: string;
-          org_id: string;
+          org_id?: string | null;
+          user_id?: string | null;
           status?: "pending" | "processing" | "completed" | "failed";
           csv_data: Json;
           results?: Json;
@@ -203,7 +222,12 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      create_organization: {
+        Args: { org_name: string; org_slug: string };
+        Returns: Database["public"]["Tables"]["organizations"]["Row"];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

@@ -12,6 +12,9 @@ const FALLBACK_SUGGESTION: AiSuggestion = {
   socialLinkOrder: ["website", "linkedin", "twitter"],
 };
 
+const clip = (value: unknown, max: number) =>
+  typeof value === "string" ? value.replace(/\s+/g, " ").trim().slice(0, max) : "";
+
 export async function generateSignatureSuggestion(input: {
   fullName: string;
   jobTitle: string;
@@ -19,27 +22,35 @@ export async function generateSignatureSuggestion(input: {
   industry?: string;
   tone?: string;
 }): Promise<AiSuggestion> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const fullName = clip(input.fullName, 80);
+  const jobTitle = clip(input.jobTitle, 80);
+  const company = clip(input.company, 80);
+  const industry = clip(input.industry, 60) || "general";
+  const tone = clip(input.tone, 30) || "professional";
 
-  if (!apiKey) {
-    return {
-      ...FALLBACK_SUGGESTION,
-      tagline: `${input.jobTitle} at ${input.company}`.slice(0, 60),
-    };
-  }
+  const fallback = {
+    ...FALLBACK_SUGGESTION,
+    tagline: `${jobTitle} at ${company}`.slice(0, 60),
+  };
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return fallback;
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({
+      model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+      generationConfig: { responseMimeType: "application/json" },
+    });
 
     const prompt = `You are an email signature design expert. Given this professional info, return ONLY valid JSON (no markdown) with signature design suggestions.
 
 Input:
-- Name: ${input.fullName}
-- Title: ${input.jobTitle}
-- Company: ${input.company}
-- Industry: ${input.industry ?? "general"}
-- Tone: ${input.tone ?? "professional"}
+- Name: ${fullName}
+- Title: ${jobTitle}
+- Company: ${company}
+- Industry: ${industry}
+- Tone: ${tone}
 
 Return JSON with these exact keys:
 {
@@ -55,11 +66,10 @@ Return JSON with these exact keys:
 
     const result = await model.generateContent(prompt);
     const text = result.response.text().replace(/```json\n?|\n?```/g, "").trim();
-    return JSON.parse(text) as AiSuggestion;
-  } catch {
-    return {
-      ...FALLBACK_SUGGESTION,
-      tagline: `${input.jobTitle} at ${input.company}`.slice(0, 60),
-    };
+    const parsed = JSON.parse(text) as Partial<AiSuggestion>;
+    return { ...fallback, ...parsed, tagline: clip(parsed.tagline, 60) || fallback.tagline };
+  } catch (error) {
+    console.error("Gemini suggestion failed, using fallback:", error);
+    return fallback;
   }
 }

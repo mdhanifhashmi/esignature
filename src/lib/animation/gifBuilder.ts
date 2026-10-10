@@ -15,6 +15,7 @@ const FRAME_DELAY = 80;
 async function loadImageBuffer(input: Buffer | string): Promise<Buffer> {
   if (typeof input === "string") {
     const response = await fetch(input);
+    if (!response.ok) throw new Error(`Could not load image (${response.status})`);
     return Buffer.from(await response.arrayBuffer());
   }
   return input;

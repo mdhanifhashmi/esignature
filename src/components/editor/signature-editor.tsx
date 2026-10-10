@@ -24,12 +24,14 @@ interface SignatureEditorProps {
   initialConfig?: SignatureConfig;
   signatureId?: string;
   signatureName?: string;
+  initialHtml?: string;
 }
 
 export function SignatureEditor({
   initialConfig,
   signatureId,
   signatureName: initialName,
+  initialHtml,
 }: SignatureEditorProps) {
   const [step, setStep] = useState(0);
   const [config, setConfig] = useState<SignatureConfig>(initialConfig ?? getDefaultConfig());
@@ -39,12 +41,15 @@ export function SignatureEditor({
   const [saving, setSaving] = useState(false);
   const [animating, setAnimating] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  // Server-rendered HTML with tracked links; cleared whenever the config changes.
+  const [savedHtml, setSavedHtml] = useState<string | null>(initialHtml ?? null);
 
   const updateConfig = useCallback((partial: Partial<SignatureConfig>) => {
     setConfig((prev) => ({ ...prev, ...partial }));
+    setSavedHtml(null);
   }, []);
 
-  const html = renderSignatureHtml(config);
+  const html = savedHtml ?? renderSignatureHtml(config);
   const progress = ((step + 1) / STEPS.length) * 100;
 
   async function handleAiSuggest() {
@@ -89,8 +94,14 @@ export function SignatureEditor({
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setSaveMessage(data.error ?? "Animation generation failed.");
+        return;
+      }
       if (data.logoGifUrl) updateConfig({ logoGifUrl: data.logoGifUrl });
       if (data.profileGifUrl) updateConfig({ profileGifUrl: data.profileGifUrl });
+    } catch {
+      setSaveMessage("Animation generation failed. Check your connection.");
     } finally {
       setAnimating(false);
     }
@@ -105,13 +116,15 @@ export function SignatureEditor({
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, config, html_output: html }),
+        body: JSON.stringify({ name, config }),
       });
       if (res.ok) {
+        const data = await res.json();
         setSaveMessage("Saved successfully!");
         if (!signatureId) {
-          const data = await res.json();
           window.location.href = `/editor/${data.id}`;
+        } else {
+          setSavedHtml(data.html_output ?? null);
         }
       } else {
         const err = await res.json();
@@ -130,10 +143,32 @@ export function SignatureEditor({
     setTimeout(() => setCopied(false), 2000);
   }
 
-  function handleImageUpload(field: "logoUrl" | "profileUrl", file: File) {
+  async function handleImageUpload(field: "logoUrl" | "profileUrl", file: File) {
+    const gifField = field === "logoUrl" ? "logoGifUrl" : "profileGifUrl";
+    const form = new FormData();
+    form.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const data = await res.json();
+      if (res.ok) {
+        updateConfig({ [field]: data.url, [gifField]: undefined });
+        return;
+      }
+      if (res.status !== 401) {
+        setSaveMessage(data.error ?? "Image upload failed.");
+        return;
+      }
+    } catch {
+      // Fall through to a local preview.
+    }
+
+    // Not signed in: preview locally. Embedded images are stripped by Gmail and
+    // Outlook, so the user must sign in before using the signature.
     const reader = new FileReader();
-    reader.onload = () => updateConfig({ [field]: reader.result as string });
+    reader.onload = () => updateConfig({ [field]: reader.result as string, [gifField]: undefined });
     reader.readAsDataURL(file);
+    setSaveMessage("Preview only — sign in so your images are hosted and show up in Gmail and Outlook.");
   }
 
   return (
@@ -340,6 +375,9 @@ export function SignatureEditor({
                   {step === 4 && (
                     <>
                       <p className="text-sm text-purple-600">Copy the HTML below and paste it into your email client signature settings.</p>
+                      {!savedHtml && (
+                        <p className="text-xs text-purple-500">Save first to get click tracking and hosted images in the copied HTML.</p>
+                      )}
                       <Textarea readOnly value={html} className="min-h-[200px] font-mono text-xs border-purple-100" />
                       <div className="flex flex-wrap gap-2">
                         <Button onClick={handleCopy}>

@@ -1,7 +1,8 @@
 export const APP_NAME = "SigMotion";
 export const APP_DESCRIPTION =
   "The only AI-generated email signature with an interactive nav bar, logo animation, and profile animation — 100% free.";
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+export const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+export const STORAGE_BUCKET = "signatures-public";
 
 export const SOCIAL_ICONS = {
   website: { label: "Website", icon: "globe" },

@@ -1,8 +1,7 @@
 import { SignatureEditor } from "@/components/editor/signature-editor";
-import { getDefaultConfig } from "@/lib/signature/renderHtml";
-import type { SignatureConfig } from "@/types/signature";
+import { normalizeConfig } from "@/lib/signature/persist";
 import { createClient } from "@/lib/supabase/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 export default async function EditorByIdPage({
   params,
@@ -10,28 +9,28 @@ export default async function EditorByIdPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  let config: SignatureConfig = getDefaultConfig();
-  let name = "My Signature";
 
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    try {
-      const supabase = await createClient();
-      const { data } = await supabase
-        .from("signatures")
-        .select("name, config")
-        .eq("id", id)
-        .single();
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) notFound();
 
-      if (data) {
-        config = data.config as unknown as SignatureConfig;
-        name = data.name;
-      } else {
-        notFound();
-      }
-    } catch {
-      // Allow offline editing without Supabase
-    }
-  }
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect(`/login?redirect=/editor/${id}`);
 
-  return <SignatureEditor initialConfig={config} signatureId={id} signatureName={name} />;
+  const { data } = await supabase
+    .from("signatures")
+    .select("name, config, html_output")
+    .eq("id", id)
+    .maybeSingle();
+
+  const config = data ? normalizeConfig(data.config) : null;
+  if (!data || !config) notFound();
+
+  return (
+    <SignatureEditor
+      initialConfig={config}
+      signatureId={id}
+      signatureName={data.name}
+      initialHtml={data.html_output}
+    />
+  );
 }

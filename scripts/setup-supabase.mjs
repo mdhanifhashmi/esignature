@@ -19,7 +19,7 @@ function loadEnv() {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
     const [key, ...rest] = trimmed.split("=");
-    env[key] = rest.join("=");
+    env[key.trim()] = rest.join("=").trim().replace(/^["']|["']$/g, "");
   }
   return env;
 }
@@ -109,20 +109,20 @@ async function main() {
     if (!exists) schemaReady = false;
   }
 
-  // Storage buckets
+  // Storage bucket (002 migration also creates it, plus its upload policies)
   await createBucket("signatures-public", true);
-  await createBucket("uploads-private", false);
 
   console.log("\n--- Next steps ---");
   if (!schemaReady) {
     console.log("1. Open Supabase Dashboard → SQL Editor");
-    console.log("2. Paste and run: supabase/migrations/001_initial_schema.sql");
+    console.log("2. Run, in order: supabase/migrations/001_initial_schema.sql, then 002_security_and_storage.sql");
     console.log("3. Re-run: node scripts/setup-supabase.mjs");
   } else {
-    console.log("Schema looks good! Run: npm run dev");
+    console.log("Schema looks good. Make sure 002_security_and_storage.sql has been run too.");
   }
   console.log("4. Enable Email auth in Supabase Dashboard → Authentication → Providers");
-  console.log("5. Add redirect URL: http://localhost:3000/auth/callback");
+  console.log("5. Authentication → URL Configuration: add http://localhost:3000/auth/callback");
+  console.log("   and https://<your-vercel-domain>/auth/callback as redirect URLs");
 }
 
 main().catch(console.error);

@@ -44,6 +44,7 @@ export function TeamManager() {
     const data = await res.json();
     if (res.ok) {
       setOrg(data.org);
+      setMembers(data.members ?? []);
       setMessage("Organization created!");
     } else {
       setMessage(data.error ?? "Failed to create organization");
